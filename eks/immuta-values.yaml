@@ -1,0 +1,166 @@
+immutaVersion: "2021.2.0"
+imageTag: "2021.2.0"
+
+imagePullSecrets:
+  # Set the name of the Image Pull Secret used for image pulling.
+  - immuta-registry
+
+# Set to the value of the external hostname for Immuta. This value must be a DNS hostname.
+externalHostname: "<YOUR EXTERNAL HOSTNAME>"
+
+web:
+  # Override imageRepository if using a registry mirror
+  imageRepository: "registry.immuta.com/immuta/immuta-service"
+  replicas: 3
+
+database:
+  # Override imageRepository if using a registry mirror
+  imageRepository: "registry.immuta.com/immuta/immuta-db"
+  replicas: 3
+  password: "<SPECIFY_PASSWORD_THAT_MEETS_YOUR_ORGANIZATIONS_POLICIES>"
+  superuserPassword: "<SPECIFY_PASSWORD_THAT_MEETS_YOUR_ORGANIZATIONS_POLICIES>"
+  replicationPassword: "<SPECIFY_PASSWORD_THAT_MEETS_YOUR_ORGANIZATIONS_POLICIES>"
+  patroniApiPassword: "<SPECIFY_PASSWORD_THAT_MEETS_YOUR_ORGANIZATIONS_POLICIES>"
+  persistence:
+    enabled: true
+    volumeClaimSpec:
+      resources:
+        requests:
+          # Set the requested storage size for database persistence.
+          # Recommended sizing:
+          # - 20Gi: POV or other small sized deployments, such as development or test environments.
+          # - 60Gi: Staging environments that mimic production, but see less use.
+          # - 120Gi: Production deployments.
+          storage: 120Gi
+
+queryEngine:
+  # Override imageRepository if using a registry mirror
+  imageRepository: "registry.immuta.com/immuta/immuta-db"
+  replicas: 3
+  password: "<SPECIFY_PASSWORD_THAT_MEETS_YOUR_ORGANIZATIONS_POLICIES>"
+  superuserPassword: "<SPECIFY_PASSWORD_THAT_MEETS_YOUR_ORGANIZATIONS_POLICIES>"
+  replicationPassword: "<SPECIFY_PASSWORD_THAT_MEETS_YOUR_ORGANIZATIONS_POLICIES>"
+  patroniApiPassword: "<SPECIFY_PASSWORD_THAT_MEETS_YOUR_ORGANIZATIONS_POLICIES>"
+  persistence:
+    enabled: true
+    volumeClaimSpec:
+      resources:
+        requests:
+          # Set the requested storage size for database persistence.
+          # Recommended sizing:
+          # - 20Gi: Usually sufficient for most deployments.
+          storage: 20Gi
+
+fingerprint:
+  # Override imageRepository if using a registry mirror
+  imageRepository: "registry.immuta.com/immuta/immuta-fingerprint"
+  replicas: 2
+
+configHook:
+  # Override imageRepository if using a registry mirror
+  imageRepository: "registry.immuta.com/immuta/immuta-deploy-tools"
+
+memcached:
+  # Override imageRepository if using a registry mirror
+  imageRepository: "registry.immuta.com/memcached"
+
+# If you choose not to deploy the ingress controller included in Immuta"s helm charts, you will
+# need to supply an alternative ingress controller that supports TCP ingress.
+nginxIngress:
+  # Override imageRepository if using a registry mirror
+  imageRepository: "registry.immuta.com/ingress-nginx-controller"
+
+  # Set this to false to disable the supplied ingress controller
+  enabled: true
+
+backup:
+  # set to true to enable backups
+  enabled: false
+
+  restore:
+    # set to true to enable restoring from backups on initial install
+    enabled: false
+
+  # Cron schedule to run backups on
+  schedule: "0 0 * * *"
+
+  # Number of backup archives to keep. Old archives will be cleaned up
+  maxBackupCount: 10
+
+  # Annotations to set on backup service account. Can be used for associating an AWS IAM role
+  # https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html
+  #serviceAccountAnnotations:
+    #eks.amazonaws.com/role-arn: arn:aws:iam::<AWS_ACCOUNT_ID>:role/<IAM_ROLE_NAME>
+
+  # Annotations to set on backup pods. Can be used for associating an AWS IAM role
+  # when used with kube2iam or kiam on the cluster
+  #podAnnotations:
+    #iam.amazonaws.com/role: <IAM_ROLE_NAME>
+
+  # Type selects one of the following backup options: volume, s3, azblob, gs
+  #type: volume
+
+  #volume:
+    # PersistentVolumeClaim spec to be used for backup volume
+    # https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims
+    #persistentVolumeClaimSpec:
+      #resources:
+        #requests:
+          #storage: 20Gi
+
+    # (optional) if claimName is set to an existing PVC no PV/PVC will be created
+    #claimName:
+
+  # Configure backups to use S3
+  #
+  # Set backup.type=s3
+  #
+  # - No additional configuration needed to use AWS Instance Roles available to nodes by default
+  # - Use backup.serviceAcccountAnnotations to grant access to an IAM Roles for Service Acccounts
+  # - Use backup.podAnnotations to grant access to an IAM Role using kube2iam or kiam
+  #s3:
+    # AWS region containing bucket
+    #awsRegion: "us-east-1"
+
+    # bucket name
+    #bucket: "immuta-backups"
+
+    # (optional) prefix in bucket under which to store backup archives
+    #bucketPrefix: ""
+
+    # Use AWS access keys to access S3. Not recommended, use AWS IAM roles instead.
+    #awsAccessKeyId:
+    #awsSecretAccessKey:
+
+
+  # Configure backups to use Azure Blob storage
+  #
+  # Set backup.type=azblob
+  #azblob:
+    # Azure storage container to store blobs in
+    #container: "immuta-backups"
+
+    # (optional) Prefix in container under which to store backups
+    #containerPrefix: ""
+
+    # Azure storage account to use
+    #azStorageAccount:
+
+    # Azure storage access key
+    #azStorageKey:
+
+    # Azure storage SAS Token
+    #azStorageSASToken:
+
+  # Configure backups to use Google Storage
+  #
+  # Set backup.type=gs
+  #gs:
+    # Storage bucket to use
+    #bucket: "immuta-backups"
+
+    # (optional) Prefix under which to store backups
+    #bucketPrefix: ""
+
+    # Kuberentes Secret name containing Google service account key JSON on data key "key.json"
+    #gsKeySecretName:
